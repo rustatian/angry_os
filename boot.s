@@ -4,6 +4,14 @@
 .set MAGIC, 0x1BADB002
 .set CHECKSUM, -(MAGIC + FLAGS)
 
+#3.1.1 The layout of Multiboot header
+#The layout of the Multiboot header must be as follows:
+#
+#Offset	Type	Field Name	Note
+#0	u32	magic	required
+#4	u32	flags	required
+#8	u32	checksum	required
+
 .section .multiboot
 .align 4
 .long MAGIC
