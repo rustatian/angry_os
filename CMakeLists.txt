@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(angry_os)
 add_executable(angry_os.bin linker.ld boot.s kernel.c)
-
+#set(CMAKE_C_COMPILER i686-elf-gcc)
+set(CMAKE_GLD_LINKER_NAME i686-elf-ld CACHE STRING "Name of the Binutils linker")
 
 set(QEMU_ARGS -cdrom ${CMAKE_SOURCE_DIR}/angry_os.iso)
 
