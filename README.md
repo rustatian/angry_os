@@ -1,3 +1,3 @@
-# angry_os
+# angry os
 
-Operating system (Core) written in Rust. Educational project.
+Operating system [Education project]
