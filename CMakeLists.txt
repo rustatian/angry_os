@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 3.16)
-project(angry_os)
+project(angry_os LANGUAGES ASM C CXX)
 
 ## Setup cross-compilation
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR i686)
 
-ENABLE_LANGUAGE(ASM)
-
 set(CMAKE_C_COMPILER /usr/bin/i686-elf-gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/i686-elf-g++)
 set(CMAKE_ASM_COMPILER /usr/bin/i686-elf-as)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD 18)
 set(CMAKE_CXX_FLAGS "-ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti")
 set(CMAKE_C_FLAGS "-ffreestanding -O2 -Wall -Wextra")
+set(CMAKE_ASM_FLAGS_RELEASE "-O3")
+set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-O2 -g")
+set(CMAKE_ASM_FLAGS_MINSIZEREL "-Os")
 
 set(KERNEL_BIN "angry_os.bin")
 set(KERNEL_ISO ${CMAKE_PROJECT_NAME}.iso)
