@@ -1,5 +1,7 @@
 # angry os
 
+![logo](https://github.com/48d90782/angry_os/raw/master/angry_os.png)
+
 Structure:
 1. `kernel.cpp` kernel_main entry point
 2. `generate-iso.sh` script to generate iso for the qemu.
