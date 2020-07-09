@@ -1,7 +1,5 @@
 # angry os
 
-Operating system from scratch in C++
-
 Structure:
 1. `kernel.cpp` kernel_main entry point
 2. `generate-iso.sh` script to generate iso for the qemu.
