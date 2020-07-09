@@ -29,10 +29,11 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
 
 ## Generating the ISO file
 add_custom_target(${KERNEL_ISO}
-        COMMAND ../generate-iso.sh
+        COMMAND ../../../generate-iso.sh
         COMMENT "Generating the kernel bootable iso file"
         BYPRODUCTS ${KERNEL_ISO})
 add_dependencies(angry_os.iso angry_os.bin)
 add_custom_command(TARGET ${KERNEL_ISO} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${KERNEL_ISO} ${CMAKE_SOURCE_DIR}/bin/)
+        COMMAND ${CMAKE_COMMAND} -E copy ${KERNEL_ISO} ${CMAKE_SOURCE_DIR}/bin/
+        COMMAND qemu-system-x86_64 -cdrom ${CMAKE_SOURCE_DIR}/bin/${KERNEL_ISO})
