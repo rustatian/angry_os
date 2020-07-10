@@ -76,7 +76,17 @@ void terminalPutEntryAt(char c, uint8_t color, size_t x, size_t y) {
     terminalBuffer[index] = vgaEntry(c, color);
 }
 
+void terminalPutNewLine() {
+    ++terminalRow;
+    terminalColumn = 0;
+}
+
+
 void terminalPutChar(char c) {
+    if (c == '\n') {
+        terminalPutNewLine();
+        return;
+    }
     terminalPutEntryAt(c, terminalColor, terminalColumn, terminalRow);
     if (++terminalColumn == vgaWidth) {
         terminalColumn = 0;
@@ -85,9 +95,11 @@ void terminalPutChar(char c) {
     }
 }
 
+
 void terminalWrite(const char *data, size_t size) {
-    for (size_t i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++) {
         terminalPutChar(data[i]);
+    }
 }
 
 void terminalWriteString(const char *data) {
@@ -101,5 +113,5 @@ extern "C" void kernel_main(void) {
 
 
     /* Newline support is left as an exercise. */
-    terminalWriteString("Hello, Angry OS!!!\n");
+    terminalWriteString("Hello, Angry OS!!!\nSee you later!");
 }
