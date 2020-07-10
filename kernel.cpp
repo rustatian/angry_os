@@ -1,7 +1,3 @@
-#include <stdbool.h>
-#include <stddef.h>
-
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint-gcc.h>
 
@@ -16,30 +12,30 @@
 #endif
 
 /* Hardware text mode color constants. */
-enum vga_color {
-    VGA_COLOR_BLACK = 0,
-    VGA_COLOR_BLUE = 1,
-    VGA_COLOR_GREEN = 2,
-    VGA_COLOR_CYAN = 3,
-    VGA_COLOR_RED = 4,
-    VGA_COLOR_MAGENTA = 5,
-    VGA_COLOR_BROWN = 6,
-    VGA_COLOR_LIGHT_GREY = 7,
-    VGA_COLOR_DARK_GREY = 8,
-    VGA_COLOR_LIGHT_BLUE = 9,
-    VGA_COLOR_LIGHT_GREEN = 10,
-    VGA_COLOR_LIGHT_CYAN = 11,
-    VGA_COLOR_LIGHT_RED = 12,
-    VGA_COLOR_LIGHT_MAGENTA = 13,
-    VGA_COLOR_LIGHT_BROWN = 14,
-    VGA_COLOR_WHITE = 15,
+enum vgaColor {
+    VgaColorBlack [[maybe_unused]] = 0,
+    VgaColorBlue [[maybe_unused]] = 1,
+    VgaColorGreen [[maybe_unused]] = 2,
+    VgaColorCyan [[maybe_unused]] = 3,
+    VgaColorRed [[maybe_unused]] = 4,
+    VgaColorMagenta [[maybe_unused]] = 5,
+    VgaColorBrown [[maybe_unused]] = 6,
+    VgaColorLightGrey [[maybe_unused]] = 7,
+    VgaColorDarkGrey [[maybe_unused]] = 8,
+    VgaColorLightBlue [[maybe_unused]] = 9,
+    VgaColorLightGreen [[maybe_unused]] = 10,
+    VgaColorLightCyan [[maybe_unused]] = 11,
+    VgaColorLightRed [[maybe_unused]] = 12,
+    VgaColorLightMagenta [[maybe_unused]] = 13,
+    VgaColorLightBrown [[maybe_unused]] = 14,
+    VgaColorWhite [[maybe_unused]] = 15,
 };
 
-static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
+static inline uint8_t vgaEntryColor(enum vgaColor fg, enum vgaColor bg) {
     return fg | bg << 4;
 }
 
-static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
+static inline uint16_t vgaEntry(unsigned char uc, uint8_t color) {
     return (uint16_t) uc | (uint16_t) color << 8;
 }
 
@@ -50,60 +46,60 @@ size_t strlen(const char *str) {
     return len;
 }
 
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
+static const size_t vgaWidth = 80;
+static const size_t vgaHeight = 25;
 
-size_t terminal_row;
-size_t terminal_column;
-uint8_t terminal_color;
-uint16_t *terminal_buffer;
+size_t terminalRow;
+size_t terminalColumn;
+uint8_t terminalColor;
+uint16_t *terminalBuffer;
 
-void terminal_initialize(void) {
-    terminal_row = 0;
-    terminal_column = 0;
-    terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-    terminal_buffer = (uint16_t *) 0xB8000;
-    for (size_t y = 0; y < VGA_HEIGHT; y++) {
-        for (size_t x = 0; x < VGA_WIDTH; x++) {
-            const size_t index = y * VGA_WIDTH + x;
-            terminal_buffer[index] = vga_entry(' ', terminal_color);
+void terminalInitialize() {
+    terminalRow = 0;
+    terminalColumn = 0;
+    terminalColor = vgaEntryColor(VgaColorLightGrey, VgaColorBlack);
+    terminalBuffer = (uint16_t *) 0xB8000;
+    for (size_t y = 0; y < vgaHeight; y++) {
+        for (size_t x = 0; x < vgaWidth; x++) {
+            const size_t index = y * vgaWidth + x;
+            terminalBuffer[index] = vgaEntry(' ', terminalColor);
         }
     }
 }
 
-void terminal_setcolor(uint8_t color) {
-    terminal_color = color;
+[[maybe_unused]] void terminalSetColor(uint8_t color) {
+    terminalColor = color;
 }
 
-void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) {
-    const size_t index = y * VGA_WIDTH + x;
-    terminal_buffer[index] = vga_entry(c, color);
+void terminalPutEntryAt(char c, uint8_t color, size_t x, size_t y) {
+    const size_t index = y * vgaWidth + x;
+    terminalBuffer[index] = vgaEntry(c, color);
 }
 
-void terminal_putchar(char c) {
-    terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-    if (++terminal_column == VGA_WIDTH) {
-        terminal_column = 0;
-        if (++terminal_row == VGA_HEIGHT)
-            terminal_row = 0;
+void terminalPutChar(char c) {
+    terminalPutEntryAt(c, terminalColor, terminalColumn, terminalRow);
+    if (++terminalColumn == vgaWidth) {
+        terminalColumn = 0;
+        if (++terminalRow == vgaHeight)
+            terminalRow = 0;
     }
 }
 
-void terminal_write(const char *data, size_t size) {
+void terminalWrite(const char *data, size_t size) {
     for (size_t i = 0; i < size; i++)
-        terminal_putchar(data[i]);
+        terminalPutChar(data[i]);
 }
 
-void terminal_writestring(const char *data) {
-    terminal_write(data, strlen(data));
+void terminalWriteString(const char *data) {
+    terminalWrite(data, strlen(data));
 }
 
 
 extern "C" void kernel_main(void) {
     /* Initialize terminal interface */
-    terminal_initialize();
+    terminalInitialize();
 
 
     /* Newline support is left as an exercise. */
-    terminal_writestring("Hello, kernel World!\n");
+    terminalWriteString("Hello, Angry OS!!!\n");
 }
