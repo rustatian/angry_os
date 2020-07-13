@@ -5,9 +5,9 @@ project(angry_os LANGUAGES ASM C CXX)
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR i686)
 
-set(CMAKE_C_COMPILER /usr/bin/i686-elf-gcc)
-set(CMAKE_CXX_COMPILER /usr/bin/i686-elf-g++)
-set(CMAKE_ASM_COMPILER /usr/bin/i686-elf-as)
+set(CMAKE_C_COMPILER ${CMAKE_SOURCE_DIR}/cross/bin/i686-elf-gcc)
+set(CMAKE_CXX_COMPILER ${CMAKE_SOURCE_DIR}/cross/bin/i686-elf-g++)
+set(CMAKE_ASM_COMPILER ${CMAKE_SOURCE_DIR}/cross/bin/i686-elf-as)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 18)
