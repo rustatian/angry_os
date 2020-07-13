@@ -6,12 +6,12 @@
 
 Structure:
 1. `kernel.cpp` kernel_main entry point  
-2. `generate-iso.sh` script to generate iso for the qemu.  
+2. `generate-iso.sh` script to generate iso for the qemu. 
+3. `cross` folder. This folder contains cross-compilers ([link](https://wiki.osdev.org/GCC_Cross-Compiler)). Build date: 13.07.2020 (based on the latest stable binutils (2.34) and gcc (10.1) )
 
-Prerequisites (ArchLinux):  
-1. `i686-elf-gcc` cross-compiler  
-2. `xorriso`  
-3. `qemu`  
+Prerequisites:  
+1. `xorriso` (preinstalled in Ubuntu) 
+2. `qemu` --> `sudo apt install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager`  
 
 How to build:  
 1. CLion - just open project in CLion and press build `angry_os.bin` target and then `angry_os.iso` target. When the build
