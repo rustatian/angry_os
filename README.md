@@ -25,6 +25,7 @@ How to build:
 
 Roadmap:
 - [ ] Bare Bones I:  
+  - [x] Cross compilers (`cross` folder)  
   - [ ] Scrolling in terminal
   - [ ] Rendering Colorful ASCII Art
   - [ ] Calling Global Constructors
