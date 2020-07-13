@@ -10,7 +10,7 @@ Structure:
 3. `cross` folder. This folder contains cross-compilers ([link](https://wiki.osdev.org/GCC_Cross-Compiler)). Build date: 13.07.2020 (based on the latest stable binutils (2.34) and gcc (10.1) )
 
 Prerequisites:  
-1. `xorriso` (preinstalled in Ubuntu) 
+1. `xorriso` --> `sudo apt install xorriso -y`  
 2. `qemu` --> `sudo apt install qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager`  
 
 How to build:  
