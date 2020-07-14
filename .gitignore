@@ -9,3 +9,5 @@ cmake-build-debug
 .idea
 build
 bin
+cross/bin/i686-elf-lto-dump
+cross/bin/i686-elf-gdb
