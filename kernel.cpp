@@ -99,6 +99,7 @@ void terminalWriteString(const char *data) {
   terminalWrite(data, strlen(data));
 }
 
+// convert integer to a char
 char *itoa(int value, char *result, int base) {
   // check that the base if valid
   if (base < 2 || base > 36) {
