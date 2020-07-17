@@ -56,7 +56,7 @@ void terminalInitialize() {
   terminalRow = 0;
   terminalColumn = 0;
   terminalColor = vgaEntryColor(VgaColorGreen, VgaColorDarkGrey);
-  terminalBuffer = (uint16_t *)0xB8000;
+  terminalBuffer = (uint16_t *)0xB8000; // buffer for the VGA
   for (size_t y = 0; y < vgaHeight; y++) {
     for (size_t x = 0; x < vgaWidth; x++) {
       const size_t index = y * vgaWidth + x;
@@ -67,8 +67,13 @@ void terminalInitialize() {
 
 [[maybe_unused]] void terminalSetColor(uint8_t color) { terminalColor = color; }
 
-void terminalPutEntryAt(char c, uint8_t color, size_t x, size_t y) {
-  const size_t index = y * vgaWidth + x;
+void terminalPutEntryAt(char c, uint8_t color, size_t termCol, size_t termRow) {
+  /*
+   * the calc is following
+   * 0xB8000 is address, 0 byte is row 0 col 0
+   * 0xB8000[0] will be termRow = 0, vgaWidth = 80, termCol = 0
+   */
+  const size_t index = termRow * vgaWidth + termCol;
   terminalBuffer[index] = vgaEntry(c, color);
 }
 
@@ -134,7 +139,7 @@ extern "C" void kmain(void) {
   terminalInitialize();
 
   terminalWriteString("Hello, Angry OS!!!\nLet's print some numbers.\n");
-  for (int i = 0; i < 100; ++i) {
+  for (int i = 0; i < 1000; ++i) {
     char *result;
     itoa(i, result, 10);
     terminalWriteString("Iteration: ");
