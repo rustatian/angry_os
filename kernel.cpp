@@ -44,25 +44,34 @@ size_t strlen(const char *str) {
   return len;
 }
 
-static const size_t vgaWidth = 80;
-static const size_t vgaHeight = 25;
+static const size_t vgaMaxColumns = 80;
+static const size_t vgaMaxRows = 25;
 
+// current row
 size_t terminalRow;
+// current column
 size_t terminalColumn;
+// color
 uint8_t terminalColor;
+// buffer address 0xB8000
 uint16_t *terminalBuffer;
+
+// clears the terminal screen
+void terminalClear() {
+  for (size_t y = 0; y < vgaMaxRows; y++) {
+    for (size_t x = 0; x < vgaMaxColumns; x++) {
+      const size_t index = y * vgaMaxColumns + x;
+      terminalBuffer[index] = vgaEntry(' ', terminalColor);
+    }
+  }
+}
 
 void terminalInitialize() {
   terminalRow = 0;
   terminalColumn = 0;
-  terminalColor = vgaEntryColor(VgaColorGreen, VgaColorDarkGrey);
-  terminalBuffer = (uint16_t *)0xB8000; // buffer for the VGA
-  for (size_t y = 0; y < vgaHeight; y++) {
-    for (size_t x = 0; x < vgaWidth; x++) {
-      const size_t index = y * vgaWidth + x;
-      terminalBuffer[index] = vgaEntry(' ', terminalColor);
-    }
-  }
+  terminalColor = vgaEntryColor(VgaColorGreen, VgaColorBlack);
+  terminalBuffer = (uint16_t *)0xB8000;  // buffer for the VGA
+  terminalClear();
 }
 
 [[maybe_unused]] void terminalSetColor(uint8_t color) { terminalColor = color; }
@@ -73,13 +82,13 @@ void terminalPutEntryAt(char c, uint8_t color, size_t termCol, size_t termRow) {
    * 0xB8000 is address, 0 byte is row 0 col 0
    * 0xB8000[0] will be termRow = 0, vgaWidth = 80, termCol = 0
    */
-  const size_t index = termRow * vgaWidth + termCol;
+  const size_t index = termRow * vgaMaxColumns + termCol;
   terminalBuffer[index] = vgaEntry(c, color);
 }
 
 void terminalPutNewLine() {
-  ++terminalRow;
   terminalColumn = 0;
+  if (++terminalRow == vgaMaxRows) terminalRow = 0;
 }
 
 void terminalPutChar(char c) {
@@ -88,9 +97,9 @@ void terminalPutChar(char c) {
     return;
   }
   terminalPutEntryAt(c, terminalColor, terminalColumn, terminalRow);
-  if (++terminalColumn == vgaWidth) {
+  if (++terminalColumn == vgaMaxColumns) {
     terminalColumn = 0;
-    if (++terminalRow == vgaHeight) terminalRow = 0;
+    if (++terminalRow == vgaMaxRows) terminalRow = 0;
   }
 }
 
