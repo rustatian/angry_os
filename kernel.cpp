@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
 #if defined(__linux__)
 #error \
     "You are not using a cross-compiler, you will most certainly run into trouble"
@@ -9,6 +10,22 @@
 #if !defined(__i386__)
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
+
+static inline void outb(uint16_t port, uint8_t val) {
+  asm volatile("outb %0, %1" : : "a"(val), "Nd"(port));
+  /* There's an outb %al, $imm8  encoding, for compile-time constant port
+   * numbers that fit in 8b.  (N constraint). Wider immediate constants would be
+   * truncated at assemble-time (e.g. "i" constraint). The  outb  %al, %dx
+   * encoding is the only option for all other cases.
+   * %1 expands to %dx because  port  is a uint16_t.  %w1 could be used if we
+   * had the port number a wider C type */
+}
+
+static inline uint8_t inb(uint16_t port) {
+  uint8_t ret;
+  asm volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
+  return ret;
+}
 
 /* Hardware text mode color constants. */
 enum vgaColor {
@@ -31,7 +48,7 @@ enum vgaColor {
 };
 
 static inline uint8_t vgaEntryColor(enum vgaColor fg, enum vgaColor bg) {
-  return fg | bg << 4u;
+  return (fg & 0x0F) << 4u | (bg & 0x0F);
 }
 
 static inline uint16_t vgaEntry(unsigned char uc, uint8_t color) {
@@ -69,7 +86,7 @@ void terminalClear() {
 void terminalInitialize() {
   terminalRow = 0;
   terminalColumn = 0;
-  terminalColor = vgaEntryColor(VgaColorGreen, VgaColorBlack);
+  terminalColor = vgaEntryColor(VgaColorBlack,  VgaColorWhite);
   terminalBuffer = (uint16_t *)0xB8000;  // buffer for the VGA
   terminalClear();
 }
@@ -143,16 +160,26 @@ char *itoa(int value, char *result, int base) {
   return result;
 }
 
+void enable_cursor(uint8_t cursor_start, uint8_t cursor_end) {
+  outb(0x3D4, 0x0A);
+  outb(0x3D5, (inb(0x3D5u) & 0xC0u) | cursor_start);
+
+  outb(0x3D4, 0x0B);
+  outb(0x3D5, (inb(0x3D5u) & 0xE0u) | cursor_end);
+}
+
 extern "C" void kmain(void) {
   /* Initialize terminal interface */
   terminalInitialize();
 
-  terminalWriteString("Hello, Angry OS!!!\nLet's print some numbers.\n");
-  for (int i = 0; i < 1000; ++i) {
-    char *result;
-    itoa(i, result, 10);
-    terminalWriteString("Iteration: ");
-    terminalWriteString(result);
-    terminalWriteString("\n");
-  }
+  enable_cursor(10, 10);
+
+  //  terminalWriteString("Hello, Angry OS!!!\nLet's print some numbers.\n");
+  //  for (int i = 0; i < 1000; ++i) {
+  //    char *result;
+  //    itoa(i, result, 10);
+  //    terminalWriteString("Iteration: ");
+  //    terminalWriteString(result);
+  //    terminalWriteString("\n");
+  //  }
 }
