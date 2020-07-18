@@ -11,6 +11,7 @@ set(CMAKE_ASM_COMPILER ${CMAKE_SOURCE_DIR}/cross/bin/i686-elf-as)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 18)
+set(CMAKE_ASM_FLAGS "-msyntax=intel")
 set(CMAKE_CXX_FLAGS "-ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti")
 set(CMAKE_C_FLAGS "-ffreestanding -O2 -Wall -Wextra")
 set(CMAKE_ASM_FLAGS_RELEASE "-O3")
@@ -20,9 +21,9 @@ set(CMAKE_ASM_FLAGS_MINSIZEREL "-Os")
 set(KERNEL_BIN "angry_os.bin")
 set(KERNEL_ISO ${CMAKE_PROJECT_NAME}.iso)
 
-## Building the kernel binary
 add_executable(${KERNEL_BIN} boot.s kernel.cpp)
 set_target_properties(${KERNEL_BIN} PROPERTIES LINK_FLAGS "-T ${CMAKE_SOURCE_DIR}/linker.ld -ffreestanding -O2 -nostdlib -lgcc")
+
 add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
         COMMAND ${CMAKE_COMMAND} -E copy ${KERNEL_BIN} ${CMAKE_SOURCE_DIR}/bin/)
