@@ -36,5 +36,4 @@ add_custom_target(${KERNEL_ISO}
 add_dependencies(angry_os.iso angry_os.bin)
 add_custom_command(TARGET ${KERNEL_ISO} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${KERNEL_ISO} ${CMAKE_SOURCE_DIR}/bin/
-        COMMAND qemu-system-x86_64 -m 128 -vga none -device virtio-vga,xres=1024,yres=768 -cdrom ${CMAKE_SOURCE_DIR}/bin/${KERNEL_ISO})
+        COMMAND ${CMAKE_COMMAND} -E copy ${KERNEL_ISO} ${CMAKE_SOURCE_DIR}/bin/)
