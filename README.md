@@ -4,18 +4,21 @@
   <img src="https://github.com/48d90782/angry_os/blob/master/images/angy_os.png" />
 </p>
 
-Structure:
+**Structure**:
 1. `kernel.cpp` kernel_main entry point  
 2. `generate-iso.sh` script to generate iso for the qemu. 
-3. `boot.s`
-4. `linker.ld`
+3. `boot.s`  
+4. `linker.ld`  
 5. `cross` folder. This folder contains cross-compilers ([link](https://wiki.osdev.org/GCC_Cross-Compiler)). Build date: 13.07.2020 (based on the latest stable binutils (2.34) and gcc (10.1) )
 
-Prerequisites:  
-1. `xorriso` --> `sudo apt install -y xorriso`  
-2. `qemu` --> `sudo apt install -y qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager`  
+**📝Prerequisites**:  
+1. `xorriso` to build ISO  
+2. `qemu` to run kernel (ISO)  
+3. `nasm and i686-elf cross compilers` to compile kernel  
+3. `sudo apt install -y nasm xorriso qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager`
 
-How to build:  
+
+**How to build**:  
 1. CLion - just open project in CLion and press build `angry_os.bin` target and then `angry_os.iso` target. When the build
    will be finished, `qemu` will start automatically.  
    
