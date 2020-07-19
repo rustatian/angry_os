@@ -31,7 +31,7 @@
 **Roadmap**:
 - [ ] Bare Bones I:  
   - [x] Cross compilers (`cross` folder)  
-  - [ ] Scrolling in terminal
+  - [X] Scrolling in terminal
   - [ ] Rendering Colorful ASCII Art
   - [ ] Calling Global Constructors
   - [ ] Meaty Skeleton
