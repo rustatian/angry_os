@@ -28,7 +28,7 @@
    2.3 `cmake --build . --target angry_os.bin && cmake --build . --target angry_os.iso`. If you will get such error `../../../generate-iso.sh: No such file or directory`,
        then in `CMakeLists.txt`, correct path to `generate-iso.sh` --> `COMMAND ../../../generate-iso.sh`  
 
-Roadmap:
+**Roadmap**:
 - [ ] Bare Bones I:  
   - [x] Cross compilers (`cross` folder)  
   - [ ] Scrolling in terminal
@@ -36,5 +36,5 @@ Roadmap:
   - [ ] Calling Global Constructors
   - [ ] Meaty Skeleton
 
-GUI:  
+**GUI**:  
 1. I am planning to use GTK3 for the GUI

@@ -1,7 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 #if defined(__linux__)
 #error \
     "You are not using a cross-compiler, you will most certainly run into trouble"
@@ -27,6 +26,18 @@ static inline uint8_t inb(uint16_t port) {
   return ret;
 }
 
+static const size_t vgaMaxColumns = 80;
+static const size_t vgaMaxRows = 25;
+
+// current row
+size_t terminalRow;
+// current column
+size_t terminalColumn;
+// color
+uint8_t terminalColor;
+// buffer address 0xB8000
+uint16_t *terminalBuffer;
+
 /* Hardware text mode color constants. */
 enum vgaColor {
   VgaColorBlack [[maybe_unused]] = 0,
@@ -48,30 +59,30 @@ enum vgaColor {
 };
 
 static inline uint8_t vgaEntryColor(enum vgaColor fg, enum vgaColor bg) {
-  return (fg & 0x0F) << 4u | (bg & 0x0F);
+  return (fg & 0x0Fu) << 4u | (bg & 0x0Fu);
 }
 
 static inline uint16_t vgaEntry(unsigned char uc, uint8_t color) {
   return (uint16_t)uc | (uint16_t)color << 8u;
 }
 
+void scroll() {
+  for (size_t x = 0; x < vgaMaxRows; x++) {
+    for (size_t y = 0; y < vgaMaxColumns; y++) {
+      const size_t index1 = x * vgaMaxColumns + y;
+      const size_t index2 = (x + 1) * vgaMaxColumns + y;
+      terminalBuffer[index1] = terminalBuffer[index2];
+    }
+  }
+}
+
+void checkMax() {}
+
 size_t strlen(const char *str) {
   size_t len = 0;
   while (str[len]) len++;
   return len;
 }
-
-static const size_t vgaMaxColumns = 80;
-static const size_t vgaMaxRows = 25;
-
-// current row
-size_t terminalRow;
-// current column
-size_t terminalColumn;
-// color
-uint8_t terminalColor;
-// buffer address 0xB8000
-uint16_t *terminalBuffer;
 
 // clears the terminal screen
 void terminalClear() {
@@ -86,7 +97,7 @@ void terminalClear() {
 void terminalInitialize() {
   terminalRow = 0;
   terminalColumn = 0;
-  terminalColor = vgaEntryColor(VgaColorBlack,  VgaColorWhite);
+  terminalColor = vgaEntryColor(VgaColorBlack, VgaColorWhite);
   terminalBuffer = (uint16_t *)0xB8000;  // buffer for the VGA
   terminalClear();
 }
@@ -105,7 +116,8 @@ void terminalPutEntryAt(char c, uint8_t color, size_t termCol, size_t termRow) {
 
 void terminalPutNewLine() {
   terminalColumn = 0;
-  if (++terminalRow == vgaMaxRows) terminalRow = 0;
+  if (++terminalRow == vgaMaxRows) --terminalRow;
+  scroll();
 }
 
 void terminalPutChar(char c) {
@@ -116,7 +128,8 @@ void terminalPutChar(char c) {
   terminalPutEntryAt(c, terminalColor, terminalColumn, terminalRow);
   if (++terminalColumn == vgaMaxColumns) {
     terminalColumn = 0;
-    if (++terminalRow == vgaMaxRows) terminalRow = 0;
+    if (++terminalRow == vgaMaxRows) --terminalRow;
+    scroll();
   }
 }
 
@@ -172,14 +185,12 @@ extern "C" void kmain(void) {
   /* Initialize terminal interface */
   terminalInitialize();
 
-  enable_cursor(10, 10);
-
-  //  terminalWriteString("Hello, Angry OS!!!\nLet's print some numbers.\n");
-  //  for (int i = 0; i < 1000; ++i) {
-  //    char *result;
-  //    itoa(i, result, 10);
-  //    terminalWriteString("Iteration: ");
-  //    terminalWriteString(result);
-  //    terminalWriteString("\n");
-  //  }
+  terminalWriteString("Hello, Angry OS!!!\nLet's print some numbers.\n");
+  for (int i = 0; i < 10000; ++i) {
+    char *result;
+    itoa(i, result, 10);
+    terminalWriteString("Iteration: ");
+    terminalWriteString(result);
+    terminalWriteString("\n");
+  }
 }
