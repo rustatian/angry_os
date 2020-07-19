@@ -10,22 +10,6 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
 
-static inline void outb(uint16_t port, uint8_t val) {
-  asm volatile("outb %0, %1" : : "a"(val), "Nd"(port));
-  /* There's an outb %al, $imm8  encoding, for compile-time constant port
-   * numbers that fit in 8b.  (N constraint). Wider immediate constants would be
-   * truncated at assemble-time (e.g. "i" constraint). The  outb  %al, %dx
-   * encoding is the only option for all other cases.
-   * %1 expands to %dx because  port  is a uint16_t.  %w1 could be used if we
-   * had the port number a wider C type */
-}
-
-static inline uint8_t inb(uint16_t port) {
-  uint8_t ret;
-  asm volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
-  return ret;
-}
-
 static const size_t vgaMaxColumns = 80;
 static const size_t vgaMaxRows = 25;
 
@@ -75,8 +59,6 @@ void scroll() {
     }
   }
 }
-
-void checkMax() {}
 
 size_t strlen(const char *str) {
   size_t len = 0;
@@ -173,20 +155,12 @@ char *itoa(int value, char *result, int base) {
   return result;
 }
 
-void enable_cursor(uint8_t cursor_start, uint8_t cursor_end) {
-  outb(0x3D4, 0x0A);
-  outb(0x3D5, (inb(0x3D5u) & 0xC0u) | cursor_start);
-
-  outb(0x3D4, 0x0B);
-  outb(0x3D5, (inb(0x3D5u) & 0xE0u) | cursor_end);
-}
-
 extern "C" void kmain(void) {
   /* Initialize terminal interface */
   terminalInitialize();
 
   terminalWriteString("Hello, Angry OS!!!\nLet's print some numbers.\n");
-  for (int i = 0; i < 10000; ++i) {
+  for (int i = 0; i < 100001; ++i) {
     char *result;
     itoa(i, result, 10);
     terminalWriteString("Iteration: ");
