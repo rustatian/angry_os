@@ -11,7 +11,7 @@
 4. `linker.ld`  
 5. `cross` folder. This folder contains cross-compilers ([link](https://wiki.osdev.org/GCC_Cross-Compiler)). Build date: 13.07.2020 (based on the latest stable binutils (2.34) and gcc (10.1) )
 
-**📝Prerequisites**:  
+**📝 Prerequisites**:  
 1. `xorriso` to build ISO  
 2. `qemu` to run kernel (ISO)  
 3. `nasm and i686-elf cross compilers` to compile kernel  
