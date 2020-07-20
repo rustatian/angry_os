@@ -32,9 +32,10 @@
 - [ ] Bare Bones I:  
   - [x] Cross compilers (`cross` folder)  
   - [X] Scrolling in terminal
+  - [ ] Read the book [link](https://www.cs.bham.ac.uk/~exr/lectures/opsys/10_11/lectures/os-dev.pdf)
   - [ ] Rendering Colorful ASCII Art
   - [ ] Calling Global Constructors
   - [ ] Meaty Skeleton
 
 **GUI**:  
-1. I am planning to use GTK3 for the GUI
+1. I am planning to use Qt5 for the GUI
