@@ -44,8 +44,8 @@ set(KERNEL_ISO ${CMAKE_PROJECT_NAME}.iso)
 add_library(CRTI_OBJ OBJECT lib/crti.asm)
 add_library(CRTN_OBJ OBJECT lib/crtn.asm)
 
-add_executable(${KERNEL_BIN} boot.asm CRTI_OBJ ${CRTBEGIN_OBJ} kernel.cpp)
-set_target_properties( ${KERNEL_BIN} ${CRTEND_OBJ} CRTN_OBJ PROPERTIES LINK_FLAGS "-T ${CMAKE_SOURCE_DIR}/linker.ld -ffreestanding -O2 -nostdlib -lgcc")
+add_executable(${KERNEL_BIN} boot.asm kernel.cpp)
+set_target_properties(${KERNEL_BIN} PROPERTIES LINK_FLAGS "-T ${CMAKE_SOURCE_DIR}/linker.ld -ffreestanding -O2 -nostdlib -lgcc")
 
 add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
