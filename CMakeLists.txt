@@ -53,7 +53,7 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
 
 ## Generating the ISO file
 add_custom_target(${KERNEL_ISO}
-        COMMAND ../../../generate-iso.sh
+        COMMAND ../../generate-iso.sh
         COMMENT "Generating the kernel bootable iso file"
         BYPRODUCTS ${KERNEL_ISO})
 add_dependencies(angry_os.iso angry_os.bin)
