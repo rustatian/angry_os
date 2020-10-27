@@ -1,12 +1,2 @@
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-cmake-build-debug
-**/cmake-build-debug
-.idea
-build
-bin
-cross
+/target
+Cargo.lock
