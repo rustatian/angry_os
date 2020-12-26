@@ -14,6 +14,7 @@
 **🏎 Roadmap**:
 - Considerations
     - RAM should be more than > 4Gb
+    - NO LEGACY!
 - UEFI kernel
     - PXE boot (via internet)
     - UEFI as loader
