@@ -4,6 +4,7 @@
 
 
 **📝 Prerequisites**:  
+- https://sandpile.org/x86/initial.htm  
 
 
 
@@ -11,7 +12,10 @@
 
 
 **🏎 Roadmap**:
+- Considerations
+    - RAM should be more than > 4Gb
 - UEFI kernel
+    - PXE boot (via internet)
     - UEFI as loader
     - UEFI for memory map and stdout
     
@@ -21,3 +25,8 @@
     - Mutable memory is exclusive to one core
         - Cache coherency
         - No locks
+    - Page tables don't need locks
+    - No TLB shootdowns
+    
+- Soft reboots
+    - Bootloader/Loader
