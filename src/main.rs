@@ -1,5 +1,8 @@
+#![feature(asm)]
 #![no_std]
 #![no_main]
+
+mod core_requirements;
 
 // panic handler
 use core::panic::PanicInfo;
@@ -11,4 +14,10 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 #[no_mangle]
-pub extern "C" fn efi_main() {}
+extern "C" fn efi_main() {
+    unsafe {
+        core::ptr::write_volatile(0x414141444414 as *mut u64, 0);
+    }
+}
+
+// pub extern fn efi_main(_h: efi::Handle, st: *mut efi::SystemTable) -> efi::Status
