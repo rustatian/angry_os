@@ -31,3 +31,6 @@
     
 - Soft reboots
     - Bootloader/Loader
+
+Useful commands:
+- objdump -M intel target/x86_64-unknown-uefi/debug/angry_os.efi
