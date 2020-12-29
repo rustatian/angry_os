@@ -78,8 +78,29 @@ pub unsafe extern "C" fn memmove(dest: *mut u8, src: *const u8, mut n: usize) ->
                 n = n.wrapping_sub(1);
                 *dest.offset(n as isize) = *src.offset(n as isize);
             }
+
+            return dest;
+        }
+
+        // copy the non-overlapping tail part
+        while n >= overhang {
+            // update the length reminder
+            n = n.wrapping_sub(overhang);
+
+            // copy the remaining parts
+            let src = src.offset(n as isize);
+            let dst = dest.offset(n as isize);
+            memcpy(dest, src, overhang);
+        }
+
+        // check if we copied everything
+        if n == 0 {
+            return dest;
         }
     }
+
+    // just copy forwards
+    memcpy(dest, src, n);
 
     dest
 }
