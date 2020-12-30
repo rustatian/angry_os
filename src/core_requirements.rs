@@ -96,7 +96,7 @@ pub unsafe extern "C" fn memmove(dest: *mut u8, src: *const u8, mut n: usize) ->
 
             // copy the remaining parts
             let src = src.offset(n as isize);
-            let dst = dest.offset(n as isize);
+            let dest = dest.offset(n as isize);
             memcpy(dest, src, overhang);
         }
 
