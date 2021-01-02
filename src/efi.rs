@@ -1,4 +1,8 @@
-use core::sync::atomic::{AtomicPtr, Ordering};
+///! https://dox.ipxe.org/annotated.html
+use core::{
+    sync::atomic::{AtomicPtr, Ordering},
+    u32, usize,
+};
 
 pub fn output_string(string: &str) {}
 
@@ -17,21 +21,128 @@ pub unsafe fn register_system_table(system_table: *mut SystemTable) {
     );
 }
 
+// https://dox.ipxe.org/UefiMultiPhase_8h.html#a0e2cdd0290e753cca604d3977cbe8bb9
+#[derive(Clone, Copy, Debug)]
+#[repr(C)]
+enum EfiMemoryType {
+    ///
+    /// Not used.
+    ///
+    EfiReservedMemoryType,
+    ///
+    /// The code portions of a loaded application.
+    /// (Note that UEFI OS loaders are UEFI applications.)
+    ///
+    EfiLoaderCode,
+    ///
+    /// The data portions of a loaded application and the default data allocation
+    /// type used by an application to allocate pool memory.
+    ///
+    EfiLoaderData,
+    ///
+    /// The code portions of a loaded Boot Services Driver.
+    ///
+    EfiBootServicesCode,
+    ///
+    /// The data portions of a loaded Boot Serves Driver, and the default data
+    /// allocation type used by a Boot Services Driver to allocate pool memory.
+    ///
+    EfiBootServicesData,
+    ///
+    /// The code portions of a loaded Runtime Services Driver.
+    ///
+    EfiRuntimeServicesCode,
+    ///
+    /// The data portions of a loaded Runtime Services Driver and the default
+    /// data allocation type used by a Runtime Services Driver to allocate pool memory.
+    ///
+    EfiRuntimeServicesData,
+    ///
+    /// Free (unallocated) memory.
+    ///
+    EfiConventionalMemory,
+    ///
+    /// Memory in which errors have been detected.
+    ///
+    EfiUnusableMemory,
+    ///
+    /// Memory that holds the ACPI tables.
+    ///
+    EfiACPIReclaimMemory,
+    ///
+    /// Address space reserved for use by the firmware.
+    ///
+    EfiACPIMemoryNVS,
+    ///
+    /// Used by system firmware to request that a memory-mapped IO region
+    /// be mapped by the OS to a virtual address so it can be accessed by EFI runtime services.
+    ///
+    EfiMemoryMappedIO,
+    ///
+    /// System memory-mapped IO region that is used to translate memory
+    /// cycles to IO cycles by the processor.
+    ///
+    EfiMemoryMappedIOPortSpace,
+    ///
+    /// Address space reserved by the firmware for code that is part of the processor.
+    ///
+    EfiPalCode,
+    ///
+    /// A memory region that operates as EfiConventionalMemory,
+    /// however it happens to also support byte-addressable non-volatility.
+    ///
+    EfiPersistentMemory,
+    EfiMaxMemoryType,
+}
+
+impl EfiMemoryType {
+    /// Returns whether of not this memory type is available for general
+    /// purpose use after boot services have boot exited
+    fn avail_post_exit_boot_services(&self) -> bool {
+        match self {
+            EfiMemoryType::EfiBootServicesCode
+            | EfiMemoryType::EfiBootServicesData
+            | EfiMemoryType::EfiConventionalMemory
+            | EfiMemoryType::EfiPersistentMemory => true,
+            _ => return false,
+        }
+    }
+}
+
 ///! UEFI uses the EFI System Table, which contains pointers to the runtime and boot services tables
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
 pub struct SystemTable {
+    // The table header for the EFI System Table
     hdr: EfiTableHeader,
-    firmware_vendor: *mut u16,
+    // A pointer to a null terminated string that identifies the vendor that produces the system firmware for the platform
+    firmware_vendor: *const u16,
+    // A firmware vendor specific value that identifies the revision of the system firmware for the platform
     firmware_revision: u32,
+
+    // The handle for the active console input device
     console_in_handle: EfiHandle,
-    con_in: *mut EfiSimpleTextInputProtocol,
+    // A pointer to the EFI_SIMPLE_TEXT_INPUT_PROTOCOL interface that is associated with ConsoleInHandle
+    con_in: *const EfiSimpleTextInputProtocol,
+
+    // The handle for the active console output device
     console_out_handle: EfiHandle,
-    con_out: *mut EfiSimpleTextOutputProtocol,
+    // A pointer to the EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL interface that is associated with ConsoleOutHandle
+    con_out: *const EfiSimpleTextOutputProtocol,
+
+    // The handle for the active standard error console device
+    standard_error_handle: EfiHandle,
+    // 	A pointer to the EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL interface that is associated with StandardErrorHandle
+    std_err: *const EfiSimpleTextOutputProtocol,
+    // A pointer to the EFI Boot Services Table
+    boot_services: *const EfiBootServices,
+    number_of_table_entries: usize,
+    _runtime_services: usize,
+    _configuration_table: usize,
 }
 
 ///! Data structure that precedes all of the standard EFI table types
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 #[repr(C)]
 struct EfiTableHeader {
     /*
@@ -132,7 +243,8 @@ struct EfiSimpleTextOutputProtocol {
                                       characters in the string could not be
                                       rendered and were skipped.
     **/
-    output_string: unsafe fn(this: *const EfiSimpleTextOutputProtocol, string: u16) -> EfiStatus,
+    output_string:
+        unsafe fn(this: *const EfiSimpleTextOutputProtocol, string: *const u16) -> EfiStatus,
     /**
       Verifies that all characters in a string can be output to the
       target device.
@@ -146,7 +258,8 @@ struct EfiSimpleTextOutputProtocol {
                                rendered by one or more of the output devices mapped
                                by the EFI handle.
     **/
-    test_string: unsafe fn(this: *const EfiSimpleTextOutputProtocol, string: u16) -> EfiStatus,
+    test_string:
+        unsafe fn(this: *const EfiSimpleTextOutputProtocol, string: *const u16) -> EfiStatus,
     /**
       Returns information for an available text mode that the output device(s)
       supports.
@@ -168,4 +281,75 @@ struct EfiSimpleTextOutputProtocol {
         columns: *mut usize,
         rows: *mut usize,
     ) -> EfiStatus,
+}
+
+#[repr(C)]
+struct EfiMemoryDescriptor {
+    // Type of the memory region.
+    r#type: u32,
+    ///
+    /// Physical address of the first byte of the memory region.  Must aligned
+    /// on a 4 KB boundary.
+    ///
+    physical_start: u64,
+    ///
+    /// Virtual address of the first byte of the memory region.  Must aligned
+    /// on a 4 KB boundary.
+    ///
+    virtual_start: u64,
+    ///
+    /// Number of 4KB pages in the memory region.
+    ///
+    number_of_pages: u64,
+    ///
+    /// Attributes of the memory region that describe the bit mask of capabilities
+    /// for that memory region, and not necessarily the current settings for that
+    /// memory region.
+    ///
+    attribute: u64,
+}
+
+// https://dox.ipxe.org/structEFI__BOOT__SERVICES.html#ac2694db09258bd684a07e08f5248c421
+// EFI Boot Services Table
+#[repr(C)]
+struct EfiBootServices {
+    // The table header for the EFI Boot Services Table
+    hdr: EfiTableHeader,
+    _raise_tpl: usize,
+    _restore_tpl: usize,
+    _allocate_pages: usize,
+    _free_pages: usize,
+
+    // https://dox.ipxe.org/UefiSpec_8h.html#a6a58fcf17f205e9b4ff45fd9b198829a
+    get_memory_map: unsafe fn(
+        memory_map_size: &mut usize,
+        memory_map: *mut u8,
+        map_key: &mut usize,
+        descriptor_size: &mut usize,
+        descriptor_version: &mut u32,
+    ) -> EfiStatus,
+
+    _allocate_pool: usize,
+    _free_pool: usize,
+    _create_event: usize,
+    _set_timer: usize,
+    _wait_for_event: usize,
+    _signal_event: usize,
+    _close_event: usize,
+    _check_event: usize,
+    _install_protocol_interface: usize,
+    _reinstall_protocol_interface: usize,
+    _uninstall_protocol_interface: usize,
+    _handle_protocol: usize,
+    _reserved: usize,
+    _register_protocol_notify: usize,
+    _locate_handle: usize,
+    _locate_device_path: usize,
+    _install_configuration_table: usize,
+    _load_image: usize,
+    _start_image: usize,
+    _exit: usize,
+    _unload_image: usize,
+
+    exit_boot_services: unsafe fn(image_handle: EfiHandle, map_key: usize) -> EfiStatus,
 }
