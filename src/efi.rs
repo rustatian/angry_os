@@ -1,8 +1,56 @@
+use crate::print;
+
 ///! https://dox.ipxe.org/annotated.html
 use core::{
     sync::atomic::{AtomicPtr, Ordering},
     u32, usize,
 };
+
+pub fn get_memory_map() {
+    let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
+
+    if st.is_null() {
+        return;
+    }
+
+    let mut memory_map = [0u8; 8 * 1024];
+    let mut free_memory = 0u64;
+    unsafe {
+        let mut size = core::mem::size_of_val(&memory_map);
+        let mut key = 0;
+        let mut mdesc_size = 0;
+        let mut mdesc_version = 0;
+
+        let ret = ((*(*st).boot_services).get_memory_map)(
+            &mut size,
+            memory_map.as_mut_ptr(),
+            &mut key,
+            &mut mdesc_size,
+            &mut mdesc_version,
+        );
+
+        assert!(ret.0 == 0, "{:x?}", ret);
+
+        for off in (0..size).step_by(mdesc_size) {
+            let entry =
+                core::ptr::read_unaligned(memory_map[off..].as_ptr() as *const EfiMemoryDescriptor);
+            let typ: EfiMemoryType = entry.r#type.into();
+
+            if typ.avail_post_exit_boot_services() {
+                free_memory += entry.number_of_pages * 4096;
+            }
+
+            print!(
+                "{:016x} {:016x} {:?}\n",
+                entry.physical_start,
+                entry.number_of_pages * 4096,
+                typ
+            );
+        }
+    }
+
+    print!("Total bytes free {}\n", free_memory);
+}
 
 pub fn output_string(string: &str) {
     // get system table
@@ -60,13 +108,18 @@ pub fn output_string(string: &str) {
 static EFI_SYSTEM_TABLE: AtomicPtr<EfiSystemTable> = AtomicPtr::new(core::ptr::null_mut());
 
 /// Register a system table pointer.
-pub unsafe fn register_system_table(system_table: *mut EfiSystemTable) {
-    EFI_SYSTEM_TABLE.compare_exchange(
+pub unsafe fn register_system_table(system_table: *mut EfiSystemTable) -> Result<(), ()> {
+    let res = EFI_SYSTEM_TABLE.compare_exchange(
         core::ptr::null_mut(),
         system_table,
         Ordering::SeqCst,
         Ordering::Relaxed,
     );
+
+    match res {
+        Ok(_) => Ok(()),
+        Err(_) => Err(()),
+    }
 }
 
 // https://dox.ipxe.org/UefiMultiPhase_8h.html#a0e2cdd0290e753cca604d3977cbe8bb9
@@ -176,6 +229,7 @@ impl From<u32> for EfiMemoryType {
             12 => EfiMemoryType::EfiMemoryMappedIOPortSpace,
             13 => EfiMemoryType::EfiPalCode,
             14 => EfiMemoryType::EfiPersistentMemory,
+            15 => EfiMemoryType::EfiMaxMemoryType,
             _ => EfiMemoryType::Invalid,
         }
     }
@@ -206,10 +260,14 @@ pub struct EfiSystemTable {
     standard_error_handle: EfiHandle,
     // 	A pointer to the EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL interface that is associated with StandardErrorHandle
     std_err: *const EfiSimpleTextOutputProtocol,
+
+    _runtime_services: usize,
+
     // A pointer to the EFI Boot Services Table
     boot_services: *const EfiBootServices,
+
     number_of_table_entries: usize,
-    _runtime_services: usize,
+
     _configuration_table: usize,
 }
 
@@ -249,7 +307,7 @@ struct EfiTableHeader {
 #[repr(C)]
 pub struct EfiHandle(usize);
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 #[repr(C)]
 pub struct EfiStatus(pub usize);
 

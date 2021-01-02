@@ -39,8 +39,18 @@ extern "C" fn efi_main(
     st: *mut efi::EfiSystemTable,
 ) -> efi::EfiStatus {
     unsafe {
-        efi::register_system_table(st);
+        let res = efi::register_system_table(st);
+        if res.is_err() {
+            panic!("Error when registering system table");
+        }
     }
     efi::output_string("HELLO EFI!!!!\n");
-    panic!("PANIC");
+    efi::get_memory_map();
+
+    loop {
+        unsafe {
+            asm!("hlt");
+        }
+    }
+    //efi::EfiStatus::default()
 }
