@@ -4,15 +4,63 @@ use core::{
     u32, usize,
 };
 
-pub fn output_string(string: &str) {}
+pub fn output_string(string: &str) {
+    // get system table
+    let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
+
+    // ugghhh, ok, null is possible
+    if st.is_null() {
+        return;
+    }
+
+    // Get the console stdout pointer
+    let out = unsafe { (*st).con_out };
+
+    // Create a tmp buffer capable of holding 31 character + null terminator at once
+    //
+    // UEFI uses UCS-2 and not utf-16
+    let mut tmp = [0u16; 32];
+    let mut in_use = 0;
+
+    // iterate over all characters
+    for chr in string.encode_utf16() {
+        if chr == b'\n' as u16 {
+            tmp[in_use] = b'\r' as u16;
+            in_use += 1;
+        }
+
+        tmp[in_use] = chr;
+        in_use += 1;
+        // full without null terminator
+        if in_use == (tmp.len() - 2) {
+            tmp[in_use] = 0; // null terminator
+        }
+
+        // write to stdout
+        unsafe {
+            ((*out).output_string)(out, tmp.as_ptr());
+        }
+        // clear
+        in_use = 0;
+    }
+
+    if in_use > 0 {
+        // null terminator
+        tmp[in_use] = 0;
+        // write to stdout
+        unsafe {
+            ((*out).output_string)(out, tmp.as_ptr());
+        }
+    }
+}
 
 /// A pointer to the EFI system table which is saved upon the entry of the kernel.
 ///
 /// Used to do input and output to the console.
-static EFI_SYSTEM_TABLE: AtomicPtr<SystemTable> = AtomicPtr::new(core::ptr::null_mut());
+static EFI_SYSTEM_TABLE: AtomicPtr<EfiSystemTable> = AtomicPtr::new(core::ptr::null_mut());
 
 /// Register a system table pointer.
-pub unsafe fn register_system_table(system_table: *mut SystemTable) {
+pub unsafe fn register_system_table(system_table: *mut EfiSystemTable) {
     EFI_SYSTEM_TABLE.compare_exchange(
         core::ptr::null_mut(),
         system_table,
@@ -136,7 +184,7 @@ impl From<u32> for EfiMemoryType {
 ///! UEFI uses the EFI System Table, which contains pointers to the runtime and boot services tables
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
-pub struct SystemTable {
+pub struct EfiSystemTable {
     // The table header for the EFI System Table
     hdr: EfiTableHeader,
     // A pointer to a null terminated string that identifies the vendor that produces the system firmware for the platform
