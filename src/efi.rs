@@ -93,6 +93,7 @@ enum EfiMemoryType {
     ///
     EfiPersistentMemory,
     EfiMaxMemoryType,
+    Invalid,
 }
 
 impl EfiMemoryType {
@@ -105,6 +106,29 @@ impl EfiMemoryType {
             | EfiMemoryType::EfiConventionalMemory
             | EfiMemoryType::EfiPersistentMemory => true,
             _ => return false,
+        }
+    }
+}
+
+impl From<u32> for EfiMemoryType {
+    fn from(val: u32) -> Self {
+        match val {
+            0 => EfiMemoryType::EfiReservedMemoryType,
+            1 => EfiMemoryType::EfiLoaderCode,
+            2 => EfiMemoryType::EfiLoaderData,
+            3 => EfiMemoryType::EfiBootServicesCode,
+            4 => EfiMemoryType::EfiBootServicesData,
+            5 => EfiMemoryType::EfiRuntimeServicesCode,
+            6 => EfiMemoryType::EfiRuntimeServicesData,
+            7 => EfiMemoryType::EfiConventionalMemory,
+            8 => EfiMemoryType::EfiUnusableMemory,
+            9 => EfiMemoryType::EfiACPIReclaimMemory,
+            10 => EfiMemoryType::EfiACPIMemoryNVS,
+            11 => EfiMemoryType::EfiMemoryMappedIO,
+            12 => EfiMemoryType::EfiMemoryMappedIOPortSpace,
+            13 => EfiMemoryType::EfiPalCode,
+            14 => EfiMemoryType::EfiPersistentMemory,
+            _ => EfiMemoryType::Invalid,
         }
     }
 }
