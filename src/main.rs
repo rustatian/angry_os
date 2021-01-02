@@ -41,6 +41,6 @@ extern "C" fn efi_main(
     unsafe {
         efi::register_system_table(st);
     }
-    efi::output_string("HELLO EFI!!!!");
+    efi::output_string("HELLO EFI!!!!\n");
     panic!("PANIC");
 }
