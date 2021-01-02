@@ -1,4 +1,23 @@
+use core::sync::atomic::{AtomicPtr, Ordering};
+
 pub fn output_string(string: &str) {}
+
+/// A pointer to the EFI system table which is saved upon the entry of the kernel.
+///
+/// Used to do input and output to the console.
+static EFI_SYSTEM_TABLE: AtomicPtr<SystemTable> = AtomicPtr::new(core::ptr::null_mut());
+
+/// Register a system table pointer.
+pub unsafe fn register_system_table(system_table: *mut SystemTable) {
+    EFI_SYSTEM_TABLE.compare_exchange(core::ptr::null_mut(), system_table, Ordering::SeqCst, Ordering::Relaxed);
+}
+
+///! UEFI uses the EFI System Table, which contains pointers to the runtime and boot services tables
+#[derive(Clone, Copy, Debug)]
+#[repr(C)]
+struct SystemTable {
+
+}
 
 ///! Data structure that precedes all of the standard EFI table types
 #[derive(Clone, Copy, Debug)]
