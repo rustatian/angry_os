@@ -6,6 +6,19 @@ use core::{
     u32, usize,
 };
 
+/// A pointer to the EFI system table which is saved upon the entry of the kernel.
+///
+/// Used to do input and output to the console.
+static EFI_SYSTEM_TABLE: AtomicPtr<EfiSystemTable> = AtomicPtr::new(core::ptr::null_mut());
+
+//
+// The EFI memory allocation functions work in units of EFI_PAGEs that are
+// 4KB. This should in no way be confused with the page size of the processor.
+// An EFI_PAGE is just the quanta of memory in EFI.
+//
+const EFI_PAGE_SIZE: u64 = 4096;
+
+/// https://dox.ipxe.org/efi__wrap_8c.html#ac42cc329230339dc8ca22883bf0de060
 pub fn get_memory_map() {
     let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
 
@@ -16,34 +29,36 @@ pub fn get_memory_map() {
     let mut memory_map = [0u8; 8 * 1024];
     let mut free_memory = 0u64;
     unsafe {
-        let mut size = core::mem::size_of_val(&memory_map);
+        // size of the memory_map
+        let mut remaining = core::mem::size_of_val(&memory_map);
         let mut key = 0;
-        let mut mdesc_size = 0;
-        let mut mdesc_version = 0;
+        let mut descriptor_size = 0;
+        let mut descriptor_version = 0;
 
         let ret = ((*(*st).boot_services).get_memory_map)(
-            &mut size,
+            &mut remaining,
             memory_map.as_mut_ptr(),
             &mut key,
-            &mut mdesc_size,
-            &mut mdesc_version,
+            &mut descriptor_size,
+            &mut descriptor_version,
         );
 
         assert!(ret.0 == 0, "{:x?}", ret);
 
-        for off in (0..size).step_by(mdesc_size) {
-            let entry =
+        for off in (0..remaining).step_by(descriptor_size) {
+            let desc =
                 core::ptr::read_unaligned(memory_map[off..].as_ptr() as *const EfiMemoryDescriptor);
-            let typ: EfiMemoryType = entry.r#type.into();
+            let typ: EfiMemoryType = desc.r#type.into();
 
             if typ.avail_post_exit_boot_services() {
-                free_memory += entry.number_of_pages * 4096;
+                free_memory += desc.number_of_pages * EFI_PAGE_SIZE;
             }
 
             print!(
-                "{:016x} {:016x} {:?}\n",
-                entry.physical_start,
-                entry.number_of_pages * 4096,
+                "{:016x} {:08x} {:016x} {:?}\n",
+                desc.physical_start,
+                desc.number_of_pages * EFI_PAGE_SIZE,
+                desc.attribute,
                 typ
             );
         }
@@ -68,20 +83,20 @@ pub fn output_string(string: &str) {
     //
     // UEFI uses UCS-2 and not utf-16
     let mut tmp = [0u16; 32];
-    let mut in_use = 0;
+    let mut idx = 0;
 
     // iterate over all characters
     for chr in string.encode_utf16() {
         if chr == b'\n' as u16 {
-            tmp[in_use] = b'\r' as u16;
-            in_use += 1;
+            tmp[idx] = b'\r' as u16;
+            idx += 1;
         }
 
-        tmp[in_use] = chr;
-        in_use += 1;
+        tmp[idx] = chr;
+        idx += 1;
         // full without null terminator
-        if in_use == (tmp.len() - 2) {
-            tmp[in_use] = 0; // null terminator
+        if idx == (tmp.len() - 2) {
+            tmp[idx] = 0; // null terminator
         }
 
         // write to stdout
@@ -89,23 +104,18 @@ pub fn output_string(string: &str) {
             ((*out).output_string)(out, tmp.as_ptr());
         }
         // clear
-        in_use = 0;
+        idx = 0;
     }
 
-    if in_use > 0 {
+    if idx > 0 {
         // null terminator
-        tmp[in_use] = 0;
+        tmp[idx] = 0;
         // write to stdout
         unsafe {
             ((*out).output_string)(out, tmp.as_ptr());
         }
     }
 }
-
-/// A pointer to the EFI system table which is saved upon the entry of the kernel.
-///
-/// Used to do input and output to the console.
-static EFI_SYSTEM_TABLE: AtomicPtr<EfiSystemTable> = AtomicPtr::new(core::ptr::null_mut());
 
 /// Register a system table pointer.
 pub unsafe fn register_system_table(system_table: *mut EfiSystemTable) -> Result<(), ()> {
@@ -451,6 +461,30 @@ struct EfiBootServices {
     _free_pages: usize,
 
     // https://dox.ipxe.org/UefiSpec_8h.html#a6a58fcf17f205e9b4ff45fd9b198829a
+    /**
+      Returns the current memory map.
+
+      @param[in, out]  MemoryMapSize         A pointer to the size, in bytes, of the MemoryMap buffer.
+                                             On input, this is the size of the buffer allocated by the caller.
+                                             On output, it is the size of the buffer returned by the firmware if
+                                             the buffer was large enough, or the size of the buffer needed to contain
+                                             the map if the buffer was too small.
+      @param[in, out]  MemoryMap             A pointer to the buffer in which firmware places the current memory
+                                             map.
+      @param[out]      MapKey                A pointer to the location in which firmware returns the key for the
+                                             current memory map.
+      @param[out]      DescriptorSize        A pointer to the location in which firmware returns the size, in bytes, of
+                                             an individual EFI_MEMORY_DESCRIPTOR.
+      @param[out]      DescriptorVersion     A pointer to the location in which firmware returns the version number
+                                             associated with the EFI_MEMORY_DESCRIPTOR.
+
+      @retval EFI_SUCCESS           The memory map was returned in the MemoryMap buffer.
+      @retval EFI_BUFFER_TOO_SMALL  The MemoryMap buffer was too small. The current buffer size
+                                    needed to hold the memory map is returned in MemoryMapSize.
+      @retval EFI_INVALID_PARAMETER 1) MemoryMapSize is NULL.
+                                    2) The MemoryMap buffer is not too small and MemoryMap is
+                                       NULL.
+    **/
     get_memory_map: unsafe fn(
         memory_map_size: &mut usize,
         memory_map: *mut u8,

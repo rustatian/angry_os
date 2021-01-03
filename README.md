@@ -1,6 +1,9 @@
 # angry os 😠
 
-**🏗 Structure**:
+**🏗 TODO**:
+
+- [ ] Implement the rest types for the EFI_SYSTEM_TABLE
+- [ ] Implement the rest types and functions for the EFI_BOOT_SERVICES
 
 **📝 Prerequisites**:
 
