@@ -37,4 +37,4 @@ Just run: ./run.sh. To exit use CTRL-A + X
 
 Useful commands:
 
-- objdump -M intel target/x86_64-unknown-uefi/debug/angry_os.efi
+- objdump -M intel -d target/x86_64-unknown-uefi/debug/angry_os.efi
