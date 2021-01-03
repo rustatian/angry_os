@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::print;
 
 ///! https://dox.ipxe.org/annotated.html
@@ -18,6 +19,9 @@ static EFI_SYSTEM_TABLE: AtomicPtr<EfiSystemTable> = AtomicPtr::new(core::ptr::n
 //
 const EFI_PAGE_SIZE: u64 = 4096;
 
+/* Maximum number of memory regions we expect to encounter */
+const MAX_MEMORY_REGIONS: usize = 8;
+
 /// https://dox.ipxe.org/efi__wrap_8c.html#ac42cc329230339dc8ca22883bf0de060
 pub fn get_memory_map() {
     let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
@@ -26,7 +30,7 @@ pub fn get_memory_map() {
         return;
     }
 
-    let mut memory_map = [0u8; 8 * 1024];
+    let mut memory_map = [0u8; MAX_MEMORY_REGIONS * 1024];
     let mut free_memory = 0u64;
     unsafe {
         // size of the memory_map
@@ -43,7 +47,17 @@ pub fn get_memory_map() {
             &mut descriptor_version,
         );
 
-        assert!(ret.0 == 0, "{:x?}", ret);
+        if ret.0 & 5 != 0 {
+            // The buffer is not large enough to hold the requested data. The
+            // required buffer size is returned in the appropriate parameter
+            // when this error occurs.
+            panic!(
+                "EFI_BUFFER_TOO_SMALL, allocate new buffer with size: {}\n",
+                remaining
+            );
+        }
+
+        //assert!(ret == 0, "{:x?}", ret);
 
         for off in (0..remaining).step_by(descriptor_size) {
             let desc =
@@ -65,6 +79,14 @@ pub fn get_memory_map() {
     }
 
     print!("Total bytes free {}\n", free_memory);
+}
+
+pub fn efi_free_pages_wrapper(address: *const u64, pages: usize) -> EfiStatus {
+    let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
+
+    print!("Free pages: {:?}, {:?}", address, pages);
+
+    unsafe { ((*(*st).boot_services).free_pages)(address, pages) }
 }
 
 pub fn output_string(string: &str) {
@@ -424,6 +446,7 @@ struct EfiSimpleTextOutputProtocol {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
 struct EfiMemoryDescriptor {
     // Type of the memory region.
     r#type: u32,
@@ -458,7 +481,7 @@ struct EfiBootServices {
     _raise_tpl: usize,
     _restore_tpl: usize,
     _allocate_pages: usize,
-    _free_pages: usize,
+    free_pages: unsafe fn(physical_address: *const u64, pages: usize) -> EfiStatus,
 
     // https://dox.ipxe.org/UefiSpec_8h.html#a6a58fcf17f205e9b4ff45fd9b198829a
     /**
