@@ -23,7 +23,7 @@ const EFI_PAGE_SIZE: u64 = 4096;
 const MAX_MEMORY_REGIONS: usize = 8;
 
 /// https://dox.ipxe.org/efi__wrap_8c.html#ac42cc329230339dc8ca22883bf0de060
-pub fn get_memory_map() {
+pub fn get_memory_map(image_handle: EfiHandle) {
     let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
 
     if st.is_null() {
@@ -57,7 +57,7 @@ pub fn get_memory_map() {
             );
         }
 
-        //assert!(ret == 0, "{:x?}", ret);
+        assert!(ret.0 == 0, "{:x?}", ret);
 
         for off in (0..remaining).step_by(descriptor_size) {
             let desc =
@@ -76,12 +76,18 @@ pub fn get_memory_map() {
                 typ
             );
         }
+
+        print!("Total bytes free {}\n", free_memory);
+        let ret = ((*(*st).boot_services).exit_boot_services)(image_handle, key);
+        assert!(ret.0 == 0, "{:x?}", ret);
     }
 
-    print!("Total bytes free {}\n", free_memory);
+    // Done with boot services
+    // We can't use print! after this
+    EFI_SYSTEM_TABLE.store(core::ptr::null_mut(), Ordering::SeqCst);
 }
 
-pub fn efi_free_pages_wrapper(address: *const u64, pages: usize) -> EfiStatus {
+pub fn efi_free_pages_wrapper(address: usize, pages: usize) -> EfiStatus {
     let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
 
     print!("Free pages: {:?}, {:?}", address, pages);
@@ -478,10 +484,16 @@ struct EfiMemoryDescriptor {
 struct EfiBootServices {
     // The table header for the EFI Boot Services Table
     hdr: EfiTableHeader,
+    //
+    // Task Priority Services
+    //
     _raise_tpl: usize,
     _restore_tpl: usize,
+    //
+    // Memory Services
+    //
     _allocate_pages: usize,
-    free_pages: unsafe fn(physical_address: *const u64, pages: usize) -> EfiStatus,
+    free_pages: unsafe fn(physical_address: usize, pages: usize) -> EfiStatus,
 
     // https://dox.ipxe.org/UefiSpec_8h.html#a6a58fcf17f205e9b4ff45fd9b198829a
     /**
@@ -518,12 +530,20 @@ struct EfiBootServices {
 
     _allocate_pool: usize,
     _free_pool: usize,
+
+    //
+    // Event & Timer Services
+    //
     _create_event: usize,
     _set_timer: usize,
     _wait_for_event: usize,
     _signal_event: usize,
     _close_event: usize,
     _check_event: usize,
+
+    //
+    // Protocol Handler Services
+    //
     _install_protocol_interface: usize,
     _reinstall_protocol_interface: usize,
     _uninstall_protocol_interface: usize,
@@ -533,10 +553,54 @@ struct EfiBootServices {
     _locate_handle: usize,
     _locate_device_path: usize,
     _install_configuration_table: usize,
-    _load_image: usize,
-    _start_image: usize,
-    _exit: usize,
-    _unload_image: usize,
 
+    //
+    // Image Services
+    //
+    _image_load: usize,
+    _image_start: usize,
+    _exit: usize,
+    _image_unload: usize,
     exit_boot_services: unsafe fn(image_handle: EfiHandle, map_key: usize) -> EfiStatus,
+
+    //
+    // Miscellaneous Services
+    //
+    _get_next_monotonic_count: usize,
+    _stall: usize,
+    _set_watchdog_timer: usize,
+
+    //
+    // DriverSupport Services
+    //
+    _connect_controller: usize,
+    _disconnect_controller: usize,
+
+    //
+    // Open and Close Protocol Services
+    //
+    _open_protocol: usize,
+    _close_protocol: usize,
+    _open_protocol_information: usize,
+
+    //
+    // Library Services
+    //
+    _protocols_per_handle: usize,
+    _locate_handle_buffer: usize,
+    _locate_protocol: usize,
+    _install_multiple_protocol_interfaces: usize,
+    _uninstall_multiple_protocol_interfaces: usize,
+
+    //
+    // 32-bit CRC Services
+    //
+    _calculate_crc32: usize,
+
+    //
+    // Miscellaneous Services
+    //
+    _copy_mem: usize,
+    _set_mem: usize,
+    _create_event_ex: usize,
 }

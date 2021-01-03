@@ -35,7 +35,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[no_mangle]
 extern "C" fn efi_main(
-    _image_handle: efi::EfiHandle,
+    image_handle: efi::EfiHandle,
     st: *mut efi::EfiSystemTable,
 ) -> efi::EfiStatus {
     unsafe {
@@ -45,7 +45,7 @@ extern "C" fn efi_main(
         }
     }
     efi::output_string("HELLO EFI!!!!\n");
-    efi::get_memory_map();
+    efi::get_memory_map(image_handle);
 
     loop {
         unsafe {

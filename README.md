@@ -5,12 +5,12 @@
 - [ ] Implement the rest types for the EFI_SYSTEM_TABLE
 - [ ] Implement the rest types and functions for the EFI_BOOT_SERVICES
 
-**📝 Prerequisites**:
+**📝 Read**:
 
 - https://sandpile.org/x86/initial.htm
 - https://github.com/rust-lang/rust/pull/56769/files
-- Linux
-- Qemu with OVMF
+- https://lwn.net/Articles/632528/
+- https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface
 
 **🧱 How to build**:  
 Just run: ./run.sh. To exit use CTRL-A + X
