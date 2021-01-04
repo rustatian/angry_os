@@ -37,7 +37,7 @@ fn panic(info: &PanicInfo) -> ! {
 extern "C" fn efi_main(
     image_handle: efi::EfiHandle,
     st: *mut efi::EfiSystemTable,
-) -> efi::EfiStatus {
+) -> u64 {
     unsafe {
         let res = efi::register_system_table(st);
         if res.is_err() {
@@ -47,10 +47,5 @@ extern "C" fn efi_main(
     efi::output_string("HELLO EFI!!!!\n");
     efi::get_memory_map(image_handle);
 
-    loop {
-        unsafe {
-            asm!("hlt");
-        }
-    }
-    //efi::EfiStatus::default()
+    panic!("EXIT");
 }
