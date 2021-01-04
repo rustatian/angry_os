@@ -47,5 +47,7 @@ extern "C" fn efi_main(
     efi::output_string("HELLO EFI!!!!\n");
     efi::get_memory_map(image_handle);
 
+    efi::get_acpi_base();
+
     panic!("EXIT");
 }

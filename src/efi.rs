@@ -23,7 +23,7 @@ const EFI_PAGE_SIZE: u64 = 4096;
 const MAX_MEMORY_REGIONS: usize = 8;
 
 /// https://dox.ipxe.org/efi__wrap_8c.html#ac42cc329230339dc8ca22883bf0de060
-pub fn get_memory_map(image_handle: EfiHandle) {
+pub fn get_memory_map(_image_handle: EfiHandle) {
     let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
 
     if st.is_null() {
@@ -84,7 +84,10 @@ pub fn get_memory_map(image_handle: EfiHandle) {
     }
 
     unsafe {
-        print!("Config table GUID: {:?}\n", (*(*st).configuration_table).guid);
+        print!(
+            "Config table GUID: {:?}\n",
+            (*(*st).configuration_table).guid
+        );
     }
 
     // Done with boot services
@@ -98,6 +101,22 @@ pub fn efi_free_pages_wrapper(address: usize, pages: usize) -> EfiStatus {
     print!("Free pages: {:?}, {:?}", address, pages);
 
     unsafe { ((*(*st).boot_services).free_pages)(address, pages) }
+}
+
+pub fn get_acpi_base() {
+    let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
+
+    if st.is_null() {
+        return;
+    }
+
+    let tables = unsafe {
+        core::slice::from_raw_parts((*st).configuration_table, (*st).number_of_table_entries)
+    };
+
+    for t in tables {
+        print!("table: {:?}\n", t);
+    }
 }
 
 pub fn output_string(string: &str) {
@@ -328,10 +347,10 @@ struct EfiConfigurationTable {
 #[repr(C)]
 #[derive(Debug)]
 struct Guid {
-    data1:u32,
-    data2:u16,
+    data1: u32,
+    data2: u16,
     data3: u16,
-    data4:[u8;8],
+    data4: [u8; 8],
 }
 
 ///! Data structure that precedes all of the standard EFI table types
