@@ -78,13 +78,18 @@ pub fn get_memory_map(image_handle: EfiHandle) {
         }
 
         print!("Total bytes free {}\n", free_memory);
-        let ret = ((*(*st).boot_services).exit_boot_services)(image_handle, key);
-        assert!(ret.0 == 0, "{:x?}", ret);
+
+        // let ret = ((*(*st).boot_services).exit_boot_services)(image_handle, key);
+        // assert!(ret.0 == 0, "{:x?}", ret);
+    }
+
+    unsafe {
+        print!("Config table GUID: {:?}\n", (*(*st).configuration_table).guid);
     }
 
     // Done with boot services
     // We can't use print! after this
-    EFI_SYSTEM_TABLE.store(core::ptr::null_mut(), Ordering::SeqCst);
+    // EFI_SYSTEM_TABLE.store(core::ptr::null_mut(), Ordering::SeqCst);
 }
 
 pub fn efi_free_pages_wrapper(address: usize, pages: usize) -> EfiStatus {
@@ -306,7 +311,27 @@ pub struct EfiSystemTable {
 
     number_of_table_entries: usize,
 
-    _configuration_table: usize,
+    configuration_table: *const EfiConfigurationTable,
+}
+
+// EFI configuration table
+#[repr(C)]
+#[derive(Debug)]
+struct EfiConfigurationTable {
+    // The 128-bit GUID value that uniquely identifies the system configuration table
+    guid: Guid,
+    // A pointer to the table associated with VendorGuid
+    void: usize,
+}
+
+// Vendor guid
+#[repr(C)]
+#[derive(Debug)]
+struct Guid {
+    data1:u32,
+    data2:u16,
+    data3: u16,
+    data4:[u8;8],
 }
 
 ///! Data structure that precedes all of the standard EFI table types
