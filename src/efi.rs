@@ -115,7 +115,7 @@ pub fn get_acpi_base() {
     };
 
     for t in tables {
-        print!("table: {:?}\n", t);
+        print!("table: {:#x?}\n", t);
     }
 }
 
@@ -128,9 +128,14 @@ pub fn output_string(string: &str) {
         return;
     }
 
-    // Get the console stdout pointer
-    let out = unsafe { (*st).con_out };
+    let st = unsafe {
+        &*st
+    };
 
+    // Get the console stdout pointer
+    let out = unsafe {
+        &*st.con_out
+    };
     // Create a tmp buffer capable of holding 31 character + null terminator at once
     //
     // UEFI uses UCS-2 and not utf-16
@@ -153,8 +158,9 @@ pub fn output_string(string: &str) {
 
         // write to stdout
         unsafe {
-            ((*out).output_string)(out, tmp.as_ptr());
+            (out.output_string)(out, tmp.as_ptr());
         }
+        
         // clear
         idx = 0;
     }
@@ -164,7 +170,7 @@ pub fn output_string(string: &str) {
         tmp[idx] = 0;
         // write to stdout
         unsafe {
-            ((*out).output_string)(out, tmp.as_ptr());
+            (out.output_string)(out, tmp.as_ptr());
         }
     }
 }
