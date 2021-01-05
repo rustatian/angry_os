@@ -11,6 +11,7 @@
 - https://github.com/rust-lang/rust/pull/56769/files
 - https://lwn.net/Articles/632528/
 - https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface
+- https://uefi.org/sites/default/files/resources/ACPI_Spec_6_3_A_Oct_6_2020.pdf
 
 **🧱 How to build**:  
 Just run: ./run.sh. To exit use CTRL-A + X

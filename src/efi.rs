@@ -128,14 +128,10 @@ pub fn output_string(string: &str) {
         return;
     }
 
-    let st = unsafe {
-        &*st
-    };
+    let st = unsafe { &*st };
 
     // Get the console stdout pointer
-    let out = unsafe {
-        &*st.con_out
-    };
+    let out = unsafe { &*st.con_out };
     // Create a tmp buffer capable of holding 31 character + null terminator at once
     //
     // UEFI uses UCS-2 and not utf-16
@@ -160,7 +156,7 @@ pub fn output_string(string: &str) {
         unsafe {
             (out.output_string)(out, tmp.as_ptr());
         }
-        
+
         // clear
         idx = 0;
     }
@@ -344,7 +340,7 @@ pub struct EfiSystemTable {
 #[derive(Debug)]
 struct EfiConfigurationTable {
     // The 128-bit GUID value that uniquely identifies the system configuration table
-    guid: Guid,
+    guid: EfiGuid,
     // A pointer to the table associated with VendorGuid
     void: usize,
 }
@@ -352,13 +348,7 @@ struct EfiConfigurationTable {
 // Vendor guid
 #[repr(C)]
 #[derive(Debug)]
-struct Guid {
-    data1: u32,
-    data2: u16,
-    data3: u16,
-    data4: [u8; 8],
-}
-
+struct EfiGuid(u32, u16, u16, [u8; 8]);
 ///! Data structure that precedes all of the standard EFI table types
 #[derive(Clone, Copy, Debug, Default)]
 #[repr(C)]
