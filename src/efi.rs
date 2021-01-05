@@ -106,6 +106,8 @@ pub fn efi_free_pages_wrapper(address: usize, pages: usize) -> EfiStatus {
 pub fn get_acpi_base() {
     let st = EFI_SYSTEM_TABLE.load(Ordering::SeqCst);
 
+    const ACPI_GUID_TABLE:EfiGuid = EfiGuid(0x8868e871,0xe4f1,0x11d3, [0xbc,0x22,0x00,0x80,0xc7,0x3c,0x88,0x81]);
+
     if st.is_null() {
         return;
     }
@@ -113,6 +115,10 @@ pub fn get_acpi_base() {
     let tables = unsafe {
         core::slice::from_raw_parts((*st).configuration_table, (*st).number_of_table_entries)
     };
+
+    tables.iter().find_map(|EfiConfigurationTable { guid, table }| {
+        (guid == &ACPI_GUID_TABLE).then(|| table)
+    });
 
     for t in tables {
         print!("table: {:#x?}\n", t);
@@ -342,12 +348,12 @@ struct EfiConfigurationTable {
     // The 128-bit GUID value that uniquely identifies the system configuration table
     guid: EfiGuid,
     // A pointer to the table associated with VendorGuid
-    void: usize,
+    table: usize,
 }
 
 // Vendor guid
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct EfiGuid(u32, u16, u16, [u8; 8]);
 ///! Data structure that precedes all of the standard EFI table types
 #[derive(Clone, Copy, Debug, Default)]

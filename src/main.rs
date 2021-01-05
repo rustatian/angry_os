@@ -1,4 +1,4 @@
-#![feature(asm, panic_info_message)]
+#![feature(asm, panic_info_message, bool_to_option)]
 #![no_std]
 #![no_main]
 #![macro_use]
