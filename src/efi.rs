@@ -125,10 +125,12 @@ pub fn get_acpi_base() {
     let acpi = tables
         .iter()
         .find_map(|EfiConfigurationTable { guid, table }| {
-            (guid == &ACPI_GUID_TABLE).then_some(table)
+            (guid == &ACPI_GUID_TABLE).then_some(*table)
         });
 
-    print!("ACPI table: {:#x?}\n", acpi);
+    print!("ACPI table: {:#x?} {:#x}\n", acpi, unsafe {
+        core::ptr::read(acpi.unwrap() as *const u64)
+    });
 }
 
 pub fn output_string(string: &str) {

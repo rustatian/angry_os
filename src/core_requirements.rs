@@ -40,8 +40,8 @@ pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
     let mut ii = 0;
 
     while ii < n {
-        let a = *s1.add(ii);
-        let b = *s2.add(ii);
+        let a = core::ptr::read(s1.add(ii));
+        let b = core::ptr::read(s2.add(ii));
         if a != b {
             return (a as i32).wrapping_sub(b as i32);
         }
@@ -68,7 +68,10 @@ pub unsafe extern "C" fn memmove(dest: *mut u8, src: *const u8, mut n: usize) ->
             // 8 byte align the dest with one byte copies
             while n != 0 && (dest as usize).wrapping_add(n) & 0x7 != 0 {
                 n = n.wrapping_sub(1);
-                *dest.offset(n as isize) = *src.offset(n as isize);
+                core::ptr::write(
+                    dest.offset(n as isize),
+                    core::ptr::read(src.offset(n as isize)),
+                )
             }
 
             // Do a rev copy 8-bytes at a time
@@ -83,7 +86,10 @@ pub unsafe extern "C" fn memmove(dest: *mut u8, src: *const u8, mut n: usize) ->
             // copy the reminder
             while n != 0 {
                 n = n.wrapping_sub(1);
-                *dest.offset(n as isize) = *src.offset(n as isize);
+                core::ptr::write(
+                    dest.offset(n as isize),
+                    core::ptr::read(src.offset(n as isize)),
+                )
             }
 
             return dest;
