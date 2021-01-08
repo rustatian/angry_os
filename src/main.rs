@@ -5,6 +5,7 @@
 mod core_requirements;
 mod efi;
 mod print;
+mod acpi;
 
 // panic handler
 use core::panic::PanicInfo;
