@@ -1,41 +1,41 @@
 # angry os 😠
 
-**🏗 TODO**:
+<p align="center">
+  <img src="https://github.com/48d90782/angry_os/blob/master/images/angy_os.png" />
+</p>
 
-- [ ] Implement the rest types for the EFI_SYSTEM_TABLE
-- [ ] Implement the rest types and functions for the EFI_BOOT_SERVICES
+**🏗 Structure**:
+1. `kernel.cpp` kernel_main entry point  
+2. `generate-iso.sh` script to generate iso for the qemu. 
+3. `boot.s`  
+4. `linker.ld`  
+5. `cross` folder. This folder contains cross-compilers ([link](https://wiki.osdev.org/GCC_Cross-Compiler)). Build date: 13.07.2020 (based on the latest stable binutils (2.34) and gcc (10.1) )
 
-**📝 Read**:
+**📝 Prerequisites**:  
+1. `xorriso` to build ISO  
+2. `qemu` to run kernel (ISO)  
+3. `nasm and i686-elf cross compilers` to compile kernel  
+3. `sudo apt install -y nasm xorriso qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager`
 
-- https://sandpile.org/x86/initial.htm
-- https://github.com/rust-lang/rust/pull/56769/files
-- https://lwn.net/Articles/632528/
-- https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface
-- https://uefi.org/sites/default/files/resources/ACPI_Spec_6_3_A_Oct_6_2020.pdf
 
 **🧱 How to build**:  
-Just run: ./run.sh. To exit use CTRL-A + X
+1. CLion - just open project in CLion and press build `angry_os.bin` target and then `angry_os.iso` target. When the build
+   will be finished, `qemu` will start automatically.  
+   
+2. Command line:  
+   2.1 `mkdir build && cd build`  
+   2.2 `cmake ../`  
+   2.3 `cmake --build . --target angry_os.bin && cmake --build . --target angry_os.iso`. If you will get such error `../../../generate-iso.sh: No such file or directory`,
+       then in `CMakeLists.txt`, correct path to `generate-iso.sh` --> `COMMAND ../../../generate-iso.sh`  
 
 **🏎 Roadmap**:
+- [ ] Bare Bones I:  
+  - [x] Cross compilers (`cross` folder)  
+  - [X] Scrolling in terminal
+  - [ ] Read the book [link](https://www.cs.bham.ac.uk/~exr/lectures/opsys/10_11/lectures/os-dev.pdf)
+  - [ ] Rendering Colorful ASCII Art
+  - [ ] Calling Global Constructors
+  - [ ] Meaty Skeleton
 
-- Considerations
-  - RAM should be more than > 4Gb
-  - NO LEGACY!
-- UEFI kernel
-  - PXE boot (via internet)
-  - UEFI as loader
-  - UEFI for memory map and stdout
-- Non-shared memory kernel
-  - Rust-style kernel
-  - Memory can be shared between cores if it is read-only
-  - Mutable memory is exclusive to one core
-    - Cache coherency
-    - No locks
-  - Page tables don't need locks
-  - No TLB shootdowns
-- Soft reboots
-  - Bootloader/Loader
-
-Useful commands:
-
-- objdump -M intel -d target/x86_64-unknown-uefi/debug/angry_os.efi
+**GUI**:  
+1. I am planning to use Qt5 for the GUI
