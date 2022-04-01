@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM ubuntu:22.04
 
 ARG BINUTILS_VERSION=2.38
 ARG GCC_VERSION=11.2.0
@@ -7,8 +7,8 @@ ARG GCC_VERSION=11.2.0
 RUN set -x \
 	&& apt-get update \
 	&& apt-get install -y wget gcc libgmp3-dev libmpfr-dev libisl-dev \
-		libcloog-isl-dev libmpc-dev texinfo bison flex make bzip2 patch \
-		build-essential
+	libmpc-dev texinfo bison flex make bzip2 patch \
+	build-essential
 
 # Pull binutils and gcc source code
 RUN set -x \
@@ -25,11 +25,13 @@ RUN set -x \
 	&& chmod -R o-w,g+w gcc-${GCC_VERSION}
 
 # Copy compile scripts
-COPY build/* /usr/local/src/
+COPY docker/* /usr/local/src/
 
 # Build and install binutils and the cross-compiler
 RUN set -x \
 	&& cd /usr/local/src \
+	&& chmod +x binutils.sh \
+	&& chmod +x gcc.sh \
 	&& ./binutils.sh ${BINUTILS_VERSION} \
 	&& ./gcc.sh ${GCC_VERSION}
 

@@ -32,6 +32,3 @@
   - [ ] Rendering Colorful ASCII Art
   - [ ] Calling Global Constructors
   - [ ] Meaty Skeleton
-
-**GUI**:  
-1. I am planning to use Qt5 for the GUI
