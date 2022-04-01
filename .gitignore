@@ -1,3 +1,6 @@
 .idea
 cross
 build
+dist
+**/kernel.bin
+**/kernel.iso
