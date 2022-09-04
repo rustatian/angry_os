@@ -1,1 +1,0 @@
-CMakeLists.txt not found in /home/valery/projects/opensource/github/rustatian/angry_os Select CMakeLists.txt
